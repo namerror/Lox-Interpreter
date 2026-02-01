@@ -10,6 +10,27 @@ import static io.github.namerror.jlox.TokenType.*;
 public class Scanner {
     private final String source;
     private final List<Token> tokens = new ArrayList<>();
+    private static final Map<String, TokenType> keywords;
+
+    static {
+        keywords = new HashMap<>(); // handle reserved keywords
+        keywords.put("and",    AND);
+        keywords.put("class",  CLASS);
+        keywords.put("else",   ELSE);
+        keywords.put("false",  FALSE);
+        keywords.put("for",    FOR);
+        keywords.put("fun",    FUN);
+        keywords.put("if",     IF);
+        keywords.put("nil",    NIL);
+        keywords.put("or",     OR);
+        keywords.put("print",  PRINT);
+        keywords.put("return", RETURN);
+        keywords.put("super",  SUPER);
+        keywords.put("this",   THIS);
+        keywords.put("true",   TRUE);
+        keywords.put("var",    VAR);
+        keywords.put("while",  WHILE);
+    }
 
     // tracking line numbers and characters along scanning
     private int start = 0;
@@ -83,6 +104,8 @@ public class Scanner {
             default:
                 if (isDigit(c)) {
                     number();
+                } else if (isAlpha(c)) {
+                    identifier();
                 } else {
                     Lox.error(line, "Unexpected character.");
                 }
@@ -139,6 +162,16 @@ public class Scanner {
         return (c >= '0' && c <= '9');
     }
 
+    private boolean isAlpha(char c) {
+        return (c >= 'a' && c <= 'z') ||
+                (c >= 'A' && c <= 'Z' ) ||
+                c == '_';
+    }
+
+    private boolean isAlphaNumeric(char c) {
+        return isAlpha(c) || isDigit(c);
+    }
+
     private void number() {
         while (isDigit(peek())) advance();
 
@@ -150,6 +183,16 @@ public class Scanner {
 
         addToken(NUMBER, Double.parseDouble(source.substring(start, current)));
 
+    }
+
+    private void identifier() {
+        while (isAlphaNumeric(peek())) advance(); // scan entire identifier if it's alphanumeric
+
+        // check if it's a reserved keyword
+        String text = source.substring(start, current);
+        TokenType type = keywords.get(text);
+        if (type==null) type = IDENTIFIER; // reassign IDENTIFIER if it's not a keyword
+        addToken(type);
     }
 
     private char peekNext() {
