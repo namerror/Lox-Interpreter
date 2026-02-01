@@ -78,6 +78,8 @@ public class Scanner {
                 line++;
                 break;
 
+            case '"': string(); break;
+
             default:
                 Lox.error(line, "Unexpected character.");
                 break;
@@ -108,5 +110,25 @@ public class Scanner {
     private void addToken(TokenType type, Object literal) {
         String text = source.substring(start, current); // get the lexeme string for the token
         this.tokens.add(new Token(type, text, literal, line));
+    }
+
+    private void string() {
+        while (peek()!='"' && !isAtEnd()) {
+            if (peek()=='\n') line++;
+            advance(); // within the string quotes ""
+        }
+
+        if (isAtEnd()) {
+            Lox.error(line, "Unterminated string");
+            return;
+        }
+
+        // second " closes, since the peek() before didn't advance
+        advance();
+
+        // get the string value, trim the " "
+        String value = source.substring(start+1, current-1);
+        addToken(STRING, value);
+
     }
 }
