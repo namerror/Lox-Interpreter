@@ -85,6 +85,11 @@ public class Scanner {
                 // matching a comment, skip until end of line
                 if (match('/')) {
                     while (peek()!='\n' && !isAtEnd()) advance();
+                } else if (match('*')) {
+                    while ((peek()!='*' || peekNext()!='/') && !isAtEnd()) {
+                        if (peek()=='\n') line++;
+                        advance(); // skipping until matched */
+                    }
                 } else {
                     addToken(SLASH);
                 }
