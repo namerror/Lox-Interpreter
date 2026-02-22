@@ -30,9 +30,9 @@ public class GenerateAst {
 
         writer.println("package io.github.namerror.jlox;");
         writer.println();
-        writer.println("import java.util.List");
+        writer.println("import java.util.List;");
         writer.println();
-        writer.println("absract class " + baseName + " {");
+        writer.println("abstract class " + baseName + " {");
         for (String type : types) {
             String className = type.split(":")[0].trim();
             String fields = type.split(":")[1].trim();
