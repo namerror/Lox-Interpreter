@@ -29,6 +29,14 @@ public class Parser {
         this.tokens = tokens;
     }
 
+    Expr parse() {
+        try {
+            return expression();
+        } catch (ParseError error) {
+            return null;
+        }
+    }
+
     private Expr expression() {
         return equality();
     }
@@ -74,7 +82,7 @@ public class Parser {
     }
 
     private Expr unary() {
-        while (match(BANG, MINUS)) {
+        if (match(BANG, MINUS)) {
             Token operator = previous();
             Expr right = unary();
             return new Expr.Unary(operator, right);
@@ -92,6 +100,7 @@ public class Parser {
             consume(RIGHT_PAREN, "Expect ')' after expression.");
             return new Expr.Grouping(expr);
         }
+        throw error(peek(), "Syntax error.");
     }
 
     private Token consume(TokenType type, String message) {
@@ -136,5 +145,33 @@ public class Parser {
     private Token advance() {
         if (!isAtEnd()) current++;
         return previous();
+    }
+
+/*   This method synchronizes tokens (to enable tracking the parser activity)
+     by discarding all tokens in current call frame on the stack (to escape the middle of parsing function) and
+     skip to the beginning of the next statement to synchronize the states
+     This is used in the context of catching an exception (which is higher up in the call stack)
+*/
+    private void synchronize() {
+        advance();
+
+        while (!isAtEnd()) {
+            if (previous().type==SEMICOLON) return; // right where we want to be, where last statement ends with
+
+            // below are all keywords that typically start at a beginning of a function
+            switch (peek().type) {
+                case CLASS:
+                case FUN:
+                case VAR:
+                case IF:
+                case WHILE:
+                case FOR:
+                case PRINT:
+                case RETURN:
+                    return;
+            }
+
+            advance();
+        }
     }
 }
